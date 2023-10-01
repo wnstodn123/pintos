@@ -59,6 +59,12 @@ static unsigned thread_ticks;   /* # of timer ticks since last yield. */
    Controlled by kernel command-line option "-o mlfqs". */
 bool thread_mlfqs;
 
+// choi
+static struct list sleep_list;
+void thread_sleep(int64_t ticks);
+void thread_wakeup(int64_t ticks);
+// end
+
 static void kernel_thread (thread_func *, void *aux);
 
 static void idle (void *aux UNUSED);
@@ -70,6 +76,37 @@ static void *alloc_frame (struct thread *, size_t size);
 static void schedule (void);
 void thread_schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
+
+// choi
+void thread_sleep(int64_t ticks) {
+  enum intr_level old_level;
+  old_level = intr_disable(); // interrupt off
+  struct thread *cur = thread_current();
+  ASSERT(cur != idle_thread);
+
+  list_push_back(&sleep_list, &cur->elem);  // sleep_list에 추가
+  cur->wakeup_ticks = ticks;  // 일어날 ticks 저장
+  thread_block();  // block state로 설정
+
+  intr_set_level(old_level); // interrupt on
+}
+
+void thread_wakeup(int64_t ticks) {
+  struct thread *thr;
+  int64_t thr_wakeup_ticks;
+  for (struct list_elem *ele = list_begin(&sleep_list); ele != list_end(&sleep_list);) {
+    thr = list_entry(ele, struct thread, elem);
+    thr_wakeup_ticks = thr->wakeup_ticks;
+    if (ticks < thr_wakeup_ticks) {
+      ele = list_next(ele);
+    }
+    else {
+      ele = list_remove(ele);
+      thread_unblock(thr);
+    }
+  }
+}
+// end
 
 /* Initializes the threading system by transforming the code
    that's currently running into a thread.  This can't work in
@@ -92,6 +129,7 @@ thread_init (void)
   lock_init (&tid_lock);
   list_init (&ready_list);
   list_init (&all_list);
+  list_init (&sleep_list); // choi
 
   /* Set up a thread structure for the running thread. */
   initial_thread = running_thread ();
