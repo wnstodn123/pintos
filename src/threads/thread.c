@@ -59,11 +59,15 @@ static unsigned thread_ticks;   /* # of timer ticks since last yield. */
    Controlled by kernel command-line option "-o mlfqs". */
 bool thread_mlfqs;
 
-// choi
+// choi (alarm clock)
 static struct list sleep_list;
 void thread_sleep(int64_t ticks);
 void thread_wakeup(int64_t ticks);
-// end
+
+// choi (priority scheduling)
+// void priority_list_insert(struct list *list, struct list_elem *ele, )
+// 우선순위 따라 list에 insert하는 함수 list.c에 구현되어있음 (list_insert_ordered)
+bool compare_priority(struct list_elem *a, struct list_elem *b);
 
 static void kernel_thread (thread_func *, void *aux);
 
@@ -77,7 +81,7 @@ static void schedule (void);
 void thread_schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
 
-// choi
+// choi (alarm clock)
 void thread_sleep(int64_t ticks) {
   enum intr_level old_level;
   old_level = intr_disable(); // interrupt off
@@ -106,7 +110,12 @@ void thread_wakeup(int64_t ticks) {
     }
   }
 }
-// end
+
+// choi (priority scheduling)
+// 우선순위 비교하는 compare 함수, list_instert_ordered 함수 less 인자로 사용
+bool compare_priority(struct list_elem *a, struct list_elem *b) {
+  return list_entry(a, struct thread, elem)->priority > list_entry(b, struct thread, elem)->priority;
+}
 
 /* Initializes the threading system by transforming the code
    that's currently running into a thread.  This can't work in
@@ -239,6 +248,11 @@ thread_create (const char *name, int priority,
   /* Add to run queue. */
   thread_unblock (t);
 
+  // choi (priority scheduling)
+  if (t->priority > thread_current()->priority) {
+    thread_yield();
+  }
+
   return tid;
 }
 
@@ -275,7 +289,11 @@ thread_unblock (struct thread *t)
 
   old_level = intr_disable ();
   ASSERT (t->status == THREAD_BLOCKED);
-  list_push_back (&ready_list, &t->elem);
+
+  // choi (priority scheduling)
+  //list_push_back (&ready_list, &t->elem);
+  list_insert_ordered(&ready_list, &t->elem, compare_priority, 0);
+
   t->status = THREAD_READY;
   intr_set_level (old_level);
 }
@@ -345,8 +363,10 @@ thread_yield (void)
   ASSERT (!intr_context ());
 
   old_level = intr_disable ();
-  if (cur != idle_thread) 
-    list_push_back (&ready_list, &cur->elem);
+  if (cur != idle_thread) {
+    list_insert_ordered(&ready_list, &cur->elem, compare_priority, 0);
+  }
+    
   cur->status = THREAD_READY;
   schedule ();
   intr_set_level (old_level);
@@ -374,6 +394,15 @@ void
 thread_set_priority (int new_priority) 
 {
   thread_current ()->priority = new_priority;
+
+  // choi (priority scheduling)
+  if (list_empty(&ready_list))
+    return;
+  else if (list_entry(list_front(&ready_list), struct thread, elem)->priority > thread_current()->priority) {
+    thread_yield();
+  }
+  else
+    ;
 }
 
 /* Returns the current thread's priority. */
