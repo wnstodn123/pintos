@@ -269,6 +269,7 @@ struct semaphore_elem
 
 // choi
 bool compare_sema(struct list_elem *a, struct list_elem *b) {
+  // list_entry에 사용할 semaphore element 정의
   struct semaphore_elem *as = list_entry(a, struct semaphore_elem, elem);
   struct semaphore_elem *bs = list_entry(b, struct semaphore_elem, elem);
   return list_entry(list_begin(&(as->semaphore.waiters)), struct thread, elem)->priority > list_entry(list_begin(&(bs->semaphore.waiters)), struct thread, elem)->priority;
