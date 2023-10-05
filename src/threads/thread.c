@@ -654,3 +654,20 @@ allocate_tid (void)
 /* Offset of `stack' member within `struct thread'.
    Used by switch.S, which can't figure it out on its own. */
 uint32_t thread_stack_ofs = offsetof (struct thread, stack);
+
+void donate_priority(void)
+{
+  int cnt = 0; //현재 thread의 lock과 연결된 모든 thread를 순회하기 위해 count
+  struct thread *t = thread_current();
+  int cur_priority = t->priority; //현재 우선순위를 현재 thread의 우선순위로 초기화
+
+  while(cnt < 9){ //nested depth는 8로 제한
+    cnt++;
+    if(t->wait_on_lock == NULL) //현재 thread에 연결된 lock이 없다면 중단
+    {
+      break;
+    }
+    t = t->wait_on_lock->holder; //lock holder thread를 모두 순회
+    t->priority = cur_priority; //우선순위 기부
+  }
+}
