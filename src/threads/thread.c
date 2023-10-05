@@ -534,8 +534,7 @@ init_thread (struct thread *t, const char *name, int priority)
   //initial priority inversion problem variable
   t->init_priority = priority;
   list_init(&t->donations);
-  list_push_back(&t->donation_elem)
-  lock_init(t->wait_on_lock)
+  t->wait_on_lock = NULL;
 
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
