@@ -90,6 +90,12 @@ struct thread
     int priority;                       /* Priority. */
     struct list_elem allelem;           /* List element for all threads list. */
 
+   // priority inversion problem
+    int init_priority;                  /* 우선순위 초기값 저장 */
+    struct lock *wait_on_lock;          /* lock을 얻기 위한 대상 thread에 대한 lock을 가리키는 포인터 */
+    struct list donations;              /* donation list */
+    struct list_elem donation_elem;     /* donation element */
+
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
 
