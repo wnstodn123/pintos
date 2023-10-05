@@ -671,3 +671,19 @@ void donate_priority(void)
     t->priority = cur_priority; //우선순위 기부
   }
 }
+
+void remove_with_lock(struct lock *lock){
+  struct thread *t = thread_current();
+  struct thread *thr;
+  
+  for(struct list_elem *ele = list_begin(&t->donations); e != list_end(&t->donations);){
+    thr = list_entry(ele, struct thread, donation_elem);
+
+    if(thr->wait_on_lock == lock){
+      ele = list_remove(ele);
+    }
+    else{
+      ele = list_next(ele);
+    }
+  }
+}
