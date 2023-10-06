@@ -734,8 +734,16 @@ void mlfqs_priority (struct thread *t) {
 }
 
 // recent_cpu 계산
-void recent_cpu (struct thread *t) {
+void mlfqs_recent_cpu (struct thread *t) {
   if (t != idle_thread) {
     t->recent_cpu = fp_add_int(fp_mul_fp(recent_cpu, fp_div_fp(fp_mul_int(load_avg, 2), fp_add_int(fp_mul_int(load_avg, 2), 1))), t->nice);
   }
+}
+
+// load_avg 계산
+void mlfqs_load_avg () {
+  int ready_threads = list_size(&ready_list) + 1;  // ready thread 개수 + running thread 개수(1개)
+  if (thread_current() == idle_thread)
+    ready_threads -= 1;
+  load_avg = fp_add_fp(fp_mul_fp(fp_div_fp(int_to_fp(59), int_to_fp(60)), load_avg), fp_mul_fp(fp_div_fp(int_to_fp(1), int_to_fp(60)), ready_threads));
 }
