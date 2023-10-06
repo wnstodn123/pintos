@@ -32,6 +32,11 @@
 #include "threads/interrupt.h"
 #include "threads/thread.h"
 
+// choi: waiters 리스트 우선순위대로 정렬하기 위한 compare 함수
+bool compare_sema(struct list_elem *a, struct list_elem *b);
+
+
+
 /* Initializes semaphore SEMA to VALUE.  A semaphore is a
    nonnegative integer along with two atomic operators for
    manipulating it:
@@ -68,7 +73,8 @@ sema_down (struct semaphore *sema)
   old_level = intr_disable ();
   while (sema->value == 0) 
     {
-      list_push_back (&sema->waiters, &thread_current ()->elem);
+      //list_push_back (&sema->waiters, &thread_current ()->elem);
+      list_insert_ordered(&sema->waiters, &thread_current ()->elem, compare_priority, 0);
       thread_block ();
     }
   sema->value--;
@@ -113,10 +119,18 @@ sema_up (struct semaphore *sema)
   ASSERT (sema != NULL);
 
   old_level = intr_disable ();
-  if (!list_empty (&sema->waiters)) 
-    thread_unblock (list_entry (list_pop_front (&sema->waiters),
-                                struct thread, elem));
+  if (!list_empty (&sema->waiters)) {
+    // choi: list_sort 구현되어있는 함수 활용해서 waiters 리스트에 들어있는 스레드 우선순위에 따라 실시간 업데이트
+    list_sort(&sema->waiters, compare_priority, 0);
+    thread_unblock (list_entry (list_pop_front (&sema->waiters), struct thread, elem));
+  }
+    
   sema->value++;
+
+  // choi: unblock된 스레드(ready_list)와 현재 스레드와 우선순위 비교 후 작아서 넘겨줘야 할 경우 yield
+  // ready list가 thread.c에 static 전역 변수로 선언되어 있어서 위 기능을 하는 함수를 thread.c에 정의함
+  check_priority_and_yield();
+
   intr_set_level (old_level);
 }
 
@@ -264,6 +278,14 @@ struct semaphore_elem
     struct semaphore semaphore;         /* This semaphore. */
   };
 
+// choi
+bool compare_sema(struct list_elem *a, struct list_elem *b) {
+  // list_entry에 사용할 semaphore element 정의
+  struct semaphore_elem *as = list_entry(a, struct semaphore_elem, elem);
+  struct semaphore_elem *bs = list_entry(b, struct semaphore_elem, elem);
+  return list_entry(list_begin(&(as->semaphore.waiters)), struct thread, elem)->priority > list_entry(list_begin(&(bs->semaphore.waiters)), struct thread, elem)->priority;
+}
+
 /* Initializes condition variable COND.  A condition variable
    allows one piece of code to signal a condition and cooperating
    code to receive the signal and act upon it. */
@@ -306,7 +328,10 @@ cond_wait (struct condition *cond, struct lock *lock)
   ASSERT (lock_held_by_current_thread (lock));
   
   sema_init (&waiter.semaphore, 0);
-  list_push_back (&cond->waiters, &waiter.elem);
+  //list_push_back (&cond->waiters, &waiter.elem);
+  // choi: 우선순위 따라 waiters 리스트에 정렬
+  list_insert_ordered(&cond->waiters, &waiter.elem, compare_sema, 0);
+
   lock_release (lock);
   sema_down (&waiter.semaphore);
   lock_acquire (lock);
@@ -327,9 +352,14 @@ cond_signal (struct condition *cond, struct lock *lock UNUSED)
   ASSERT (!intr_context ());
   ASSERT (lock_held_by_current_thread (lock));
 
-  if (!list_empty (&cond->waiters)) 
+  if (!list_empty (&cond->waiters)) {
+    // choi: 우선순위 따라 waiters 리스트 실시간 업데이트
+    list_sort(&cond->waiters, compare_sema, 0);
+
     sema_up (&list_entry (list_pop_front (&cond->waiters),
                           struct semaphore_elem, elem)->semaphore);
+  }
+
 }
 
 /* Wakes up all threads, if any, waiting on COND (protected by

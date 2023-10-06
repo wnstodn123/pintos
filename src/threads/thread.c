@@ -69,6 +69,8 @@ void thread_wakeup(int64_t ticks);
 // 우선순위 따라 list에 insert하는 함수 list.c에 구현되어있음 (list_insert_ordered)
 bool compare_priority(struct list_elem *a, struct list_elem *b);
 
+
+
 static void kernel_thread (thread_func *, void *aux);
 
 static void idle (void *aux UNUSED);
@@ -115,6 +117,18 @@ void thread_wakeup(int64_t ticks) {
 // 우선순위 비교하는 compare 함수, list_instert_ordered 함수 less 인자로 사용
 bool compare_priority(struct list_elem *a, struct list_elem *b) {
   return list_entry(a, struct thread, elem)->priority > list_entry(b, struct thread, elem)->priority;
+}
+
+// choi: unblock된 스레드(ready_list)와 현재 스레드와 우선순위 비교 후 작아서 넘겨줘야 할 경우 yield
+// ready list가 thread.c에 static 전역 변수로 선언되어 있어서 위 기능을 하는 함수를 thread.c에 정의함
+void check_priority_and_yield() {
+  if (list_empty(&ready_list))
+    return;
+  else if (list_entry(list_front(&ready_list), struct thread, elem)->priority > thread_current()->priority) {
+    thread_yield();
+  }
+  else
+    return;
 }
 
 /* Initializes the threading system by transforming the code
