@@ -678,7 +678,7 @@ void remove_with_lock(struct lock *lock){
   struct thread *t = thread_current();
   struct thread *thr;
   
-  for(struct list_elem *ele = list_begin(&t->donations); e != list_end(&t->donations);){
+  for(struct list_elem *ele = list_begin(&t->donations); ele != list_end(&t->donations);){
     thr = list_entry(ele, struct thread, donation_elem);
 
     if(thr->wait_on_lock == lock){
