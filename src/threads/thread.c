@@ -407,7 +407,9 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
-  thread_current ()->priority = new_priority;
+  thread_current ()->init_priority = new_priority;
+
+  refresh_priority(); //현재 thread의 priority가 변경 -> donation을 다시 수행
 
   // choi (priority scheduling)
   if (list_empty(&ready_list))
@@ -545,6 +547,11 @@ init_thread (struct thread *t, const char *name, int priority)
   t->priority = priority;
   t->magic = THREAD_MAGIC;
 
+  //initial priority inversion problem variable
+  t->init_priority = priority;
+  list_init(&t->donations);
+  t->wait_on_lock = NULL;
+
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
   intr_set_level (old_level);
@@ -663,3 +670,48 @@ allocate_tid (void)
 /* Offset of `stack' member within `struct thread'.
    Used by switch.S, which can't figure it out on its own. */
 uint32_t thread_stack_ofs = offsetof (struct thread, stack);
+
+void donate_priority(void)
+{
+  int cnt = 0; //현재 thread의 lock과 연결된 모든 thread를 순회하기 위해 count
+  struct thread *t = thread_current();
+  int cur_priority = t->priority; //현재 우선순위를 현재 thread의 우선순위로 초기화
+
+  while(cnt < 9){ //nested depth는 8로 제한
+    cnt++;
+    if(t->wait_on_lock == NULL) //현재 thread에 연결된 lock이 없다면 중단
+    {
+      break;
+    }
+    t = t->wait_on_lock->holder; //lock holder thread를 모두 순회
+    t->priority = cur_priority; //우선순위 기부
+  }
+}
+
+void remove_with_lock(struct lock *lock){
+  struct thread *t = thread_current();
+  struct thread *thr;
+  
+  for(struct list_elem *ele = list_begin(&t->donations); ele != list_end(&t->donations);){
+    thr = list_entry(ele, struct thread, donation_elem);
+
+    if(thr->wait_on_lock == lock){
+      ele = list_remove(ele);
+    }
+    else{
+      ele = list_next(ele);
+    }
+  }
+}
+
+void refresh_priority(void){
+  struct thread *t = thread_current();
+  t->priority = t->init_priority;
+
+  if(!list_empty(&t->donations)){
+    list_sort(&t->donations, &compare_priority, NULL);
+    struct thread *thr = list_entry(list_front(&t->donations), struct thread, donation_elem);
+    if(thr->priority > t->priority)
+      t->priority = thr->priority;
+  }
+}

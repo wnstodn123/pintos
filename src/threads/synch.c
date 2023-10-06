@@ -210,8 +210,15 @@ lock_acquire (struct lock *lock)
   ASSERT (!intr_context ());
   ASSERT (!lock_held_by_current_thread (lock));
 
+  if(lock->holder != NULL){ //lock의 holder가 존재한다면
+    thread_current()->wait_on_lock = lock; //현재 thread에 lock의 주소 저장
+    list_push_back(&lock->holder->donations, &thread_current()->donation_elem); //현재 thread의 donation list를 lock holder thread에 넘긴다.
+    donate_priority(); //priority donation 수행
+  }
+
   sema_down (&lock->semaphore);
-  lock->holder = thread_current ();
+  thread_current()->wait_on_lock = NULL;
+  lock->holder = thread_current (); //lock holder 갱신
 }
 
 /* Tries to acquires LOCK and returns true if successful or false
@@ -246,6 +253,10 @@ lock_release (struct lock *lock)
   ASSERT (lock_held_by_current_thread (lock));
 
   lock->holder = NULL;
+
+  remove_with_lock(lock);
+  refresh_priority();
+
   sema_up (&lock->semaphore);
 }
 
