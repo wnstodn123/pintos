@@ -734,14 +734,14 @@ void mlfqs_cal_priority (struct thread *t) {
 }
 
 // recent_cpu 계산
-void mlfqs_recent_cpu (struct thread *t) {
+void mlfqs_cal_recent_cpu (struct thread *t) {
   if (t != idle_thread) {
     t->recent_cpu = fp_add_int(fp_mul_fp(recent_cpu, fp_div_fp(fp_mul_int(load_avg, 2), fp_add_int(fp_mul_int(load_avg, 2), 1))), t->nice);
   }
 }
 
 // load_avg 계산
-void mlfqs_load_avg () {
+void mlfqs_cal_load_avg () {
   int ready_threads = list_size(&ready_list) + 1;  // ready thread 개수 + running thread 개수(1개)
   if (thread_current() == idle_thread)
     ready_threads -= 1;
@@ -755,6 +755,12 @@ void mlfqs_load_avg () {
 void mlfqs_increase_recent_cpu() {
   if (thread_current() != idle_thread) {
     thread_current()->recent_cpu = fp_add_int(thread_current()->recent_cpu, 1);
+  }
+}
+
+void mlfqs_update_recent_cpu() {
+  for (struct list_elem *ele = list_begin(&all_list); ele != list_end(&all_list); ele = list_next(ele)) {
+    mlfqs_cal_recent_cpu(list_entry(ele, struct thread, allelem));
   }
 }
 
