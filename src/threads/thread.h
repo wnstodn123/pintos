@@ -108,6 +108,8 @@ struct thread
     unsigned magic;                     /* Detects stack overflow. */
 
     int64_t wakeup_ticks;  // choi
+    int64_t nice;
+    int64_t recent_cpu;
   };
 
 /* If false (default), use round-robin scheduler.
