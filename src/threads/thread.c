@@ -769,7 +769,7 @@ void mlfqs_cal_load_avg () {
   int ready_threads = list_size(&ready_list) + 1;  // ready thread 개수 + running thread 개수(1개)
   if (thread_current() == idle_thread)
     ready_threads -= 1;
-  load_avg = fp_add_fp(fp_mul_fp(fp_div_fp(int_to_fp(59), int_to_fp(60)), load_avg), fp_mul_fp(fp_div_fp(int_to_fp(1), int_to_fp(60)), ready_threads));
+  load_avg = fp_add_fp(fp_mul_fp(fp_div_fp(int_to_fp(59), int_to_fp(60)), load_avg), fp_mul_int(fp_div_fp(int_to_fp(1), int_to_fp(60)), ready_threads));
 }
 
 // 4 tick마다 "모든 thread"의 priority 다시 계산
