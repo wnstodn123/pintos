@@ -441,7 +441,12 @@ thread_set_nice (int nice UNUSED)
   old_level = intr_disable ();
 
   mlfqs_cal_priority(cur);
-  refresh_priority();
+  // priority에 따라 cpu 넘겨줌
+  if(!list_empty(&ready_list)) {
+    struct thread *thr = list_entry(list_front(&ready_list), struct thread, elem);
+    if(thr->priority > cur->priority)
+      thread_yield();
+  }
   
   intr_set_level (old_level);
 }
