@@ -173,6 +173,22 @@ timer_interrupt (struct intr_frame *args UNUSED)
   ticks++;
   thread_tick ();
   thread_wakeup(ticks);  // choi
+
+  // extern bool thread_mlfqs 활용, mlfqs 옵션 주었을 경우
+  // 4 tick마다 "모든 thread"의 priority 다시 계산
+  // 1 tick마다 "현재(running) thread"의 recent_cpu 값 1 증가
+  // 1 second(timer_ticks () % TIMER_FREQ == 0) 마다 "모든 thread"의 recent_cpu 다시 계산 
+  // 1 second(timer_ticks () % TIMER_FREQ == 0) 마다 load_avg 다시 계산
+  if (thread_mlfqs) {
+    mlfqs_increase_recent_cpu();
+    if (timer_ticks () % 4 == 0) {
+      mlfqs_update_priority();
+    }
+    if (timer_ticks () % TIMER_FREQ == 0) {
+      mlfqs_cal_load_avg();
+      mlfqs_update_recent_cpu();
+    }
+  }
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer
