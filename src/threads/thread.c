@@ -463,7 +463,6 @@ thread_get_nice (void)
 int
 thread_get_load_avg (void) 
 {
-  struct thread *cur = thread_current ();
   enum intr_level old_level;
   old_level = intr_disable ();
 
@@ -477,8 +476,14 @@ thread_get_load_avg (void)
 int
 thread_get_recent_cpu (void) 
 {
-  /* Not yet implemented. */
-  return 0;
+  struct thread *cur = thread_current ();
+  enum intr_level old_level;
+  old_level = intr_disable ();
+
+  int recent_cpu_100 = fp_to_int_nearest(fp_mul_int(cur->recent_cpu, 100));
+  
+  intr_set_level (old_level);
+  return recent_cpu_100;
 }
 
 /* Idle thread.  Executes when no other thread is ready to run.
