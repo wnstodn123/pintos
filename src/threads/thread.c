@@ -463,8 +463,14 @@ thread_get_nice (void)
 int
 thread_get_load_avg (void) 
 {
-  /* Not yet implemented. */
-  return 0;
+  struct thread *cur = thread_current ();
+  enum intr_level old_level;
+  old_level = intr_disable ();
+
+  int load_avg_100 = fp_to_int_nearest(fp_mul_int(load_avg, 100));
+  
+  intr_set_level (old_level);
+  return load_avg_100;
 }
 
 /* Returns 100 times the current thread's recent_cpu value. */
