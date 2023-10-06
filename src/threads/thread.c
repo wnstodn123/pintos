@@ -723,3 +723,12 @@ void refresh_priority(void){
       t->priority = thr->priority;
   }
 }
+
+// Advanced Scheduler. mlfqs 구현
+
+// priority 계산
+void mlfqs_priority (struct thread *t) {
+  if (t != idle_thread) {
+    t->priority = fp_to_int_tozero(fp_add_int(fp_div_int(recent_cpu, -4), PRI_MAX - nice * 2));
+  }
+}
