@@ -759,7 +759,7 @@ void mlfqs_cal_priority (struct thread *t) {
 // recent_cpu 계산
 void mlfqs_cal_recent_cpu (struct thread *t) {
   if (t != idle_thread) {
-    t->recent_cpu = fp_add_int(fp_mul_fp(recent_cpu, fp_div_fp(fp_mul_int(load_avg, 2), fp_add_int(fp_mul_int(load_avg, 2), 1))), t->nice);
+    t->recent_cpu = fp_add_int(fp_mul_fp(t->recent_cpu, fp_div_fp(fp_mul_int(load_avg, 2), fp_add_int(fp_mul_int(load_avg, 2), 1))), t->nice);
   }
 }
 
