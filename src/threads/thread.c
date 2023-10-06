@@ -449,8 +449,14 @@ thread_set_nice (int nice UNUSED)
 int
 thread_get_nice (void) 
 {
-  /* Not yet implemented. */
-  return 0;
+  struct thread *cur = thread_current ();
+  enum intr_level old_level;
+  old_level = intr_disable ();
+
+  int nice = cur->nice;
+  
+  intr_set_level (old_level);
+  return nice;
 }
 
 /* Returns 100 times the system load average. */
