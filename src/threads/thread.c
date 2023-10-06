@@ -411,6 +411,10 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
+  // mlfqs일 경우 해당 함수는 실행되지 않음
+  if (thread_mlfqs)
+    return;
+
   thread_current ()->init_priority = new_priority;
 
   refresh_priority(); //현재 thread의 priority가 변경 -> donation을 다시 수행
