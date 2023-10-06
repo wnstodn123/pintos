@@ -729,6 +729,6 @@ void refresh_priority(void){
 // priority 계산
 void mlfqs_priority (struct thread *t) {
   if (t != idle_thread) {
-    t->priority = fp_to_int_tozero(fp_add_int(fp_div_int(recent_cpu, -4), PRI_MAX - nice * 2));
+    t->priority = fp_to_int_tozero(fp_add_int(fp_div_int(t->recent_cpu, -4), PRI_MAX - t->nice * 2));
   }
 }
