@@ -747,3 +747,13 @@ void mlfqs_load_avg () {
     ready_threads -= 1;
   load_avg = fp_add_fp(fp_mul_fp(fp_div_fp(int_to_fp(59), int_to_fp(60)), load_avg), fp_mul_fp(fp_div_fp(int_to_fp(1), int_to_fp(60)), ready_threads));
 }
+
+// 4 tick마다 "모든 thread"의 priority 다시 계산
+// 1 tick마다 "현재(running) thread"의 recent_cpu 값 1 증가
+// 1 second 마다 "모든 thread"의 recent_cpu 다시 계산
+// 1 second 마다 "모든 thread의" load_avg 다시 계산
+void increase_recent_cpu() {
+  if (thread_current() != idle_thread) {
+    thread_current()->recent_cpu = fp_add_int(thread_current()->recent_cpu, 1);
+  }
+}
