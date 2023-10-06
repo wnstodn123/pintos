@@ -552,6 +552,10 @@ init_thread (struct thread *t, const char *name, int priority)
   list_init(&t->donations);
   t->wait_on_lock = NULL;
 
+  // mlfqs initialize
+  t->nice = NICE_DEFAULT;
+  t->recent_cpu = RECENT_CPU_DEFAULT;
+
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
   intr_set_level (old_level);
