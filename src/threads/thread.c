@@ -13,6 +13,7 @@
 #include "threads/vaddr.h"
 #ifdef USERPROG
 #include "userprog/process.h"
+#include "threads/fixed_point.h"  // advanced scheduler에서 사용
 #endif
 
 /* Random value for struct thread's `magic' member.
