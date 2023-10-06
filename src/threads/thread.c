@@ -727,7 +727,7 @@ void refresh_priority(void){
 // Advanced Scheduler. mlfqs 구현
 
 // priority 계산
-void mlfqs_priority (struct thread *t) {
+void mlfqs_cal_priority (struct thread *t) {
   if (t != idle_thread) {
     t->priority = fp_to_int_tozero(fp_add_int(fp_div_int(t->recent_cpu, -4), PRI_MAX - t->nice * 2));
   }
@@ -752,8 +752,14 @@ void mlfqs_load_avg () {
 // 1 tick마다 "현재(running) thread"의 recent_cpu 값 1 증가
 // 1 second 마다 "모든 thread"의 recent_cpu 다시 계산
 // 1 second 마다 "모든 thread의" load_avg 다시 계산
-void increase_recent_cpu() {
+void mlfqs_increase_recent_cpu() {
   if (thread_current() != idle_thread) {
     thread_current()->recent_cpu = fp_add_int(thread_current()->recent_cpu, 1);
+  }
+}
+
+void mlfqs_update_priority() {
+  for (struct list_elem *ele = list_begin(&all_list); ele != list_end(&all_list); ele = list_next(ele)) {
+    mlfqs_cal_priority(list_entry(ele, struct thread, allelem));
   }
 }
