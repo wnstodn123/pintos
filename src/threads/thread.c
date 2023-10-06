@@ -732,3 +732,10 @@ void mlfqs_priority (struct thread *t) {
     t->priority = fp_to_int_tozero(fp_add_int(fp_div_int(t->recent_cpu, -4), PRI_MAX - t->nice * 2));
   }
 }
+
+// recent_cpu 계산
+void recent_cpu (struct thread *t) {
+  if (t != idle_thread) {
+    t->recent_cpu = fp_add_int(fp_mul_fp(recent_cpu, fp_div_fp(fp_mul_int(load_avg, 2), fp_add_int(fp_mul_int(load_avg, 2), 1))), t->nice);
+  }
+}
