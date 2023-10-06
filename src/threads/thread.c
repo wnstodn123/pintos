@@ -440,6 +440,7 @@ thread_set_nice (int nice UNUSED)
   enum intr_level old_level;
   old_level = intr_disable ();
 
+  cur->nice = nice;
   mlfqs_cal_priority(cur);
   // priority에 따라 cpu 넘겨줌
   if(!list_empty(&ready_list)) {
@@ -772,7 +773,7 @@ void mlfqs_cal_recent_cpu (struct thread *t) {
 // load_avg 계산
 void mlfqs_cal_load_avg () {
   int ready_threads = list_size(&ready_list) + 1;  // ready thread 개수 + running thread 개수(1개)
-  if (thread_current() == idle_thread)
+  if (thread_current() == idle_thread)  // idle thread는 제외함
     ready_threads -= 1;
   load_avg = fp_add_fp(fp_mul_fp(fp_div_fp(int_to_fp(59), int_to_fp(60)), load_avg), fp_mul_int(fp_div_fp(int_to_fp(1), int_to_fp(60)), ready_threads));
 }
