@@ -751,7 +751,7 @@ void mlfqs_cal_load_avg () {
 // 4 tick마다 "모든 thread"의 priority 다시 계산
 // 1 tick마다 "현재(running) thread"의 recent_cpu 값 1 증가
 // 1 second 마다 "모든 thread"의 recent_cpu 다시 계산
-// 1 second 마다 "모든 thread의" load_avg 다시 계산
+// 1 second 마다 load_avg 다시 계산
 void mlfqs_increase_recent_cpu() {
   if (thread_current() != idle_thread) {
     thread_current()->recent_cpu = fp_add_int(thread_current()->recent_cpu, 1);
