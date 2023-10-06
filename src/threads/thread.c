@@ -441,6 +441,7 @@ thread_set_nice (int nice UNUSED)
   old_level = intr_disable ();
 
   mlfqs_cal_priority(cur);
+  refresh_priority();
   
   intr_set_level (old_level);
 }
