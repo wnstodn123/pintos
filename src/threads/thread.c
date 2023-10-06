@@ -70,7 +70,8 @@ void thread_wakeup(int64_t ticks);
 // 우선순위 따라 list에 insert하는 함수 list.c에 구현되어있음 (list_insert_ordered)
 bool compare_priority(struct list_elem *a, struct list_elem *b);
 
-
+// advanced scheduler
+int load_avg;
 
 static void kernel_thread (thread_func *, void *aux);
 
@@ -171,6 +172,8 @@ thread_start (void)
   struct semaphore idle_started;
   sema_init (&idle_started, 0);
   thread_create ("idle", PRI_MIN, idle, &idle_started);
+
+  load_avg = LOAD_AVG_DEFAULT;  // advanced scheduler
 
   /* Start preemptive thread scheduling. */
   intr_enable ();
