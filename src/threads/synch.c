@@ -210,9 +210,17 @@ lock_acquire (struct lock *lock)
   ASSERT (!intr_context ());
   ASSERT (!lock_held_by_current_thread (lock));
 
+  // mlfqs의 경우 donation 비활성화
+  if (thread_mlfqs) {
+    sema_down (&lock->semaphore);
+    lock->holder = thread_current ();
+    return;
+  }
+
   if(lock->holder != NULL){ //lock의 holder가 존재한다면
     thread_current()->wait_on_lock = lock; //현재 thread에 lock의 주소 저장
-    list_push_back(&lock->holder->donations, &thread_current()->donation_elem); //현재 thread의 donation list를 lock holder thread에 넘긴다.
+    //현재 thread의 donation_elem를 lock holder thread의 donations list에 추가한다.
+    list_push_back(&lock->holder->donations, &thread_current()->donation_elem); 
     donate_priority(); //priority donation 수행
   }
 
@@ -253,6 +261,12 @@ lock_release (struct lock *lock)
   ASSERT (lock_held_by_current_thread (lock));
 
   lock->holder = NULL;
+
+  // mlfqs의 경우 donation 비활성화
+  if (thread_mlfqs) {
+    sema_up (&lock->semaphore);
+    return;
+  }
 
   remove_with_lock(lock);
   refresh_priority();
