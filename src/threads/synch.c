@@ -221,7 +221,7 @@ lock_acquire (struct lock *lock)
     thread_current()->wait_on_lock = lock; //현재 thread에 lock의 주소 저장
     //현재 thread의 donation_elem를 lock holder thread의 donations list에 추가한다.
     list_push_back(&lock->holder->donations, &thread_current()->donation_elem); 
-    donate_priority(); //priority donation 수행
+    priority_donation(); //priority donation 수행
   }
 
   sema_down (&lock->semaphore);
@@ -267,9 +267,20 @@ lock_release (struct lock *lock)
     sema_up (&lock->semaphore);
     return;
   }
+  
+  //release 되는 lock을 대기중이던 thread들은 모두 donation list에서 삭제
+  for(struct list_elem *ele = list_begin(&thread_current()->donations); ele != list_end(&thread_current()->donations);){
+    struct thread *thr = list_entry(ele, struct thread, donation_elem);
 
-  remove_with_lock(lock);
-  refresh_priority();
+    if(thr->wait_on_lock == lock){
+      ele = list_remove(ele);
+    }
+    else{
+      ele = list_next(ele);
+    }
+  }
+
+  update_priority();
 
   sema_up (&lock->semaphore);
 }

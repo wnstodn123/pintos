@@ -417,7 +417,7 @@ thread_set_priority (int new_priority)
 
   thread_current ()->init_priority = new_priority;
 
-  refresh_priority(); //현재 thread의 priority가 변경 -> donation을 다시 수행
+  update_priority(); //현재 thread의 priority가 변경 -> donation을 다시 수행
 
   // choi (priority scheduling)
   if (list_empty(&ready_list))
@@ -713,7 +713,7 @@ allocate_tid (void)
    Used by switch.S, which can't figure it out on its own. */
 uint32_t thread_stack_ofs = offsetof (struct thread, stack);
 
-void donate_priority(void)
+void priority_donation(void)
 {
   int cnt = 0;
   struct thread *t = thread_current(); //running state의 thread로 초기화
@@ -730,23 +730,7 @@ void donate_priority(void)
   }
 }
 
-void remove_with_lock(struct lock *lock){
-  struct thread *t = thread_current();
-  struct thread *thr;
-  
-  for(struct list_elem *ele = list_begin(&t->donations); ele != list_end(&t->donations);){
-    thr = list_entry(ele, struct thread, donation_elem);
-
-    if(thr->wait_on_lock == lock){
-      ele = list_remove(ele);
-    }
-    else{
-      ele = list_next(ele);
-    }
-  }
-}
-
-void refresh_priority(void){
+void update_priority(void){
   struct thread *t = thread_current();
   t->priority = t->init_priority;
 
