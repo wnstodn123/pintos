@@ -26,7 +26,7 @@ syscall_handler (struct intr_frame *f UNUSED)
 
   switch (*esp) {
     case SYS_HALT: // 0 arguement
-      shutdown_power_off();
+      halt();
       break;
     case SYS_EXIT: // 1 arguement
       get_argument(esp, args, 1);
@@ -34,7 +34,7 @@ syscall_handler (struct intr_frame *f UNUSED)
       break;
     case SYS_EXEC: // 1 arguement
       get_argument(esp, args, 1);
-      f->eax = process_execute((pid_t *)args[0]);
+      f->eax = exec((const char *)args[0]);
     case SYS_WAIT:
     case SYS_CREATE:
     case SYS_REMOVE:
@@ -48,12 +48,20 @@ syscall_handler (struct intr_frame *f UNUSED)
   }
 }
 
+void halt() {
+  shutdown_power_off();
+}
+
 void exit(int status){
   struct thread *t = thread_current();
 
   printf("%s: exit(%d)\n", t->name, status);
 
   thread_exit();
+}
+
+pid_t exec (const char *cmdline) {
+  return process_execute(cmdline);
 }
 
 void check_user_address(void *addr) {
