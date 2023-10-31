@@ -4,6 +4,7 @@
 #include "threads/interrupt.h"
 #include "threads/thread.h"
 #include "threads/vaddr.h"
+#include "lib/user/syscall.h"
 
 static void syscall_handler (struct intr_frame *);
 
@@ -21,7 +22,7 @@ syscall_handler (struct intr_frame *f UNUSED)
 
   int args[4];
   int *esp = f->esp;
-  check_user_address(esp + 4);
+  check_user_address(esp);
 
   switch (*esp) {
     case SYS_HALT:
@@ -32,6 +33,8 @@ syscall_handler (struct intr_frame *f UNUSED)
       exit(args[0]);
       break;
     case SYS_EXEC:
+      get_argument(esp, args, 1);
+      f->eax = process_execute((pid_t *)args[0]);
     case SYS_WAIT:
     case SYS_CREATE:
     case SYS_REMOVE:
