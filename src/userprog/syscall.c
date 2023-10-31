@@ -20,12 +20,17 @@ syscall_handler (struct intr_frame *f UNUSED)
   //thread_exit ();
 
   int args[4];
-  void *esp = f->esp;
-  switch (*(int *)esp) {
+  int *esp = f->esp;
+  check_user_address(esp + 4);
+
+  switch (*esp) {
     case SYS_HALT:
       shutdown_power_off();
       break;
     case SYS_EXIT:
+      get_argument(esp, args, 1);
+      exit(args[0]);
+      break;
     case SYS_EXEC:
     case SYS_WAIT:
     case SYS_CREATE:
