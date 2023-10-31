@@ -126,7 +126,7 @@ bool compare_priority(struct list_elem *a, struct list_elem *b) {
 void check_priority_and_yield() {
   if (list_empty(&ready_list))
     return;
-  else if (list_entry(list_front(&ready_list), struct thread, elem)->priority > thread_current()->priority) {
+  else if (!intr_context() && list_entry(list_front(&ready_list), struct thread, elem)->priority > thread_current()->priority) {
     thread_yield();
   }
   else
