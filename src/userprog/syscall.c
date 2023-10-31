@@ -34,12 +34,14 @@ syscall_handler (struct intr_frame *f UNUSED)
       break;
     case SYS_EXEC: // 1 arguement
       get_argument(esp, args, 1);
-      f->eax = exec((const char *)args[0]);
+      f->eax = exec((const char *)(&args[0]));
     case SYS_WAIT:
     case SYS_CREATE: // 2 arguements
       get_argument(esp, args, 2);
-      f->eax = create(args[0], args[1]);
-    case SYS_REMOVE:
+      f->eax = create((const char *)(&args[0]), (const char *)(&args[1]));
+    case SYS_REMOVE: // 1 arguement
+      get_argument(esp, args, 1);
+      f->eax = remove((const char *)(&args[0]));
     case SYS_OPEN:
     case SYS_FILESIZE:
     case SYS_READ:
@@ -62,7 +64,7 @@ void exit(int status){
   thread_exit();
 }
 
-pid_t exec (const char *cmdline) {
+pid_t exec(const char *cmdline) {
   return process_execute(cmdline);
 }
 
@@ -71,6 +73,13 @@ bool create(const char *file, unsigned initial_size) {
     exit(-1);
   else
     return filesys_create(file, initial_size);
+}
+
+bool remove(const char *file) {
+  if (file == NULL)
+    exit(-1);
+  else
+    return filesys_remove(file);
 }
 
 void check_user_address(void *addr) {
