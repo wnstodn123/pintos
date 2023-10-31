@@ -36,7 +36,9 @@ syscall_handler (struct intr_frame *f UNUSED)
       get_argument(esp, args, 1);
       f->eax = exec((const char *)args[0]);
     case SYS_WAIT:
-    case SYS_CREATE:
+    case SYS_CREATE: // 2 arguements
+      get_argument(esp, args, 2);
+      f->eax = create(args[0], args[1]);
     case SYS_REMOVE:
     case SYS_OPEN:
     case SYS_FILESIZE:
@@ -62,6 +64,13 @@ void exit(int status){
 
 pid_t exec (const char *cmdline) {
   return process_execute(cmdline);
+}
+
+bool create(const char *file, unsigned initial_size) {
+  if (file == NULL)
+    exit(-1);
+  else
+    return filesys_create(file, initial_size);
 }
 
 void check_user_address(void *addr) {
