@@ -34,3 +34,13 @@ void check_user_address(void *addr) {
     exit(-1);
   }
 }
+
+void get_argument(void *esp, int *arg , int count) {
+  uint32_t *sp = esp;
+  check_user_address(sp + 4);
+  int cnt = 0;
+  for (;count != 0; count--) {
+    arg[cnt] = sp + 4;
+    cnt ++;
+  }
+}
