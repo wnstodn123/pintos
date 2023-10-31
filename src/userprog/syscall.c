@@ -36,6 +36,8 @@ syscall_handler (struct intr_frame *f UNUSED)
       get_argument(esp, args, 1);
       f->eax = exec((const char *)(&args[0]));
     case SYS_WAIT:
+      get_argument(esp, args, 1); // 1 arguement
+      f->eax = wait((pid_t *)(&args[0]));
     case SYS_CREATE: // 2 arguements
       get_argument(esp, args, 2);
       f->eax = create((const char *)(&args[0]), (const char *)(&args[1]));
@@ -66,6 +68,10 @@ void exit(int status){
 
 pid_t exec(const char *cmdline) {
   return process_execute(cmdline);
+}
+
+int wait (pid_t pid) {
+  return process_wait(pid);
 }
 
 bool create(const char *file, unsigned initial_size) {
