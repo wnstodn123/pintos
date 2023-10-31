@@ -15,7 +15,7 @@
 #include "userprog/process.h"
 #endif
 #include "threads/fixed_point.h"  // advanced scheduler에서 사용
-
+//test
 /* Random value for struct thread's `magic' member.
    Used to detect stack overflow.  See the big comment at the top
    of thread.h for details. */
