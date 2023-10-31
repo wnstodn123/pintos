@@ -25,14 +25,16 @@ syscall_handler (struct intr_frame *f UNUSED)
   check_user_address(esp);
 
   switch (*esp) {
-    case SYS_HALT:
+    case SYS_HALT: // 0 arguement
       shutdown_power_off();
       break;
-    case SYS_EXIT:
+    case SYS_EXIT: // 1 arguement
+      check_user_address(esp + 4);
       get_argument(esp, args, 1);
       exit(args[0]);
       break;
-    case SYS_EXEC:
+    case SYS_EXEC: // 1 arguement
+      check_user_address(esp + 4);
       get_argument(esp, args, 1);
       f->eax = process_execute((pid_t *)args[0]);
     case SYS_WAIT:
