@@ -29,12 +29,10 @@ syscall_handler (struct intr_frame *f UNUSED)
       shutdown_power_off();
       break;
     case SYS_EXIT: // 1 arguement
-      check_user_address(esp + 4);
       get_argument(esp, args, 1);
       exit(args[0]);
       break;
     case SYS_EXEC: // 1 arguement
-      check_user_address(esp + 4);
       get_argument(esp, args, 1);
       f->eax = process_execute((pid_t *)args[0]);
     case SYS_WAIT:
@@ -67,10 +65,11 @@ void check_user_address(void *addr) {
 
 void get_argument(void *esp, int *arg , int count) {
   uint32_t *sp = esp;
-  check_user_address(sp + 4);
   int cnt = 0;
   for (;count != 0; count--) {
+    check_user_address(sp + 4);
     arg[cnt] = sp + 4;
     cnt ++;
+    sp = sp + 4;
   }
 }
